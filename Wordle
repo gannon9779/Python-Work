@@ -1,3 +1,66 @@
+class Player:
+    """Tracks game statistics for a player.
+    
+    Attributes:
+        name: Player name
+        total_games: Count of all games played
+        games_won: Count of won games
+        games_lost: Count of lost games
+        best_game: Best performance (lowest attempts)
+        
+    >>> p1 = Player('Susy')
+    >>> print(p1)
+    No game records for Susy
+    >>> p1.update_loss()
+    >>> p1
+    *Game records for Susy*
+    Total games: 1
+    Games won: 0
+    Games lost: 1
+    Best game: None
+    >>> p3 = Player('Alex')
+    >>> p3.update_loss()
+    >>> p3.update_loss()
+    >>> p3
+    *Game records for Alex*
+    Total games: 2
+    Games won: 0
+    Games lost: 2
+    Best game: None
+    """
+    def __init__(self, name):
+        """Initialize player with empty game stats"""
+        self.name = name 
+        self.total_games = 0 
+        self.games_won = 0
+        self.games_lost = 0 
+        self.best_game = None
+
+    def update_win(self, att):
+        """Update stats for a won game"""
+        self.total_games += 1
+        self.games_won += 1 
+        if self.best_game == None or att < self.best_game:
+            self.best_game = att
+    
+    def update_loss(self):
+        """Update stats for a lost game"""
+        self.total_games += 1
+        self.games_lost +=1
+    
+
+    def __str__(self):
+        """Return formatted game statistics"""
+        if self.total_games == 0:
+            return f'No game records for {self.name}'
+        elif self.games_won == 0:
+            return f'*Game records for {self.name}*\nTotal games: {self.total_games}\nGames won: {self.games_won}\nGames lost: {self.games_lost}\nBest game: {self.best_game}'
+        else:
+            return f'*Game records for {self.name}*\nTotal games: {self.total_games}\nGames won: {self.games_won}\nGames lost: {self.games_lost}\nBest game: {self.best_game} attempts'
+
+
+    __repr__=__str__
+
 class Wordle:
     """Implements Wordle game logic with player tracking.
     
