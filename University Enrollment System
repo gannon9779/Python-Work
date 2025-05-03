@@ -1,0 +1,446 @@
+
+class Course:
+
+    def __init__(self, cid, cname, credits):
+        """
+        Initialize a Course object with course 
+        """
+        self.cid = cid
+        self.cname = cname
+        self.credits = credits
+
+    def __str__(self):
+        """
+        Return a string representation of the Course object
+        """
+        return f"{self.cid}({self.credits}): {self.cname}" # Format: "CID(Credits): CName"
+
+    __repr__ = __str__
+
+    def __eq__(self, other):
+        """
+        Check if two Course objects are equal based on their course ID
+        """
+        if isinstance(other, Course) and self.cid == other.cid:
+            return True # Courses are equal if their IDs match
+        else:
+            return False # Courses are not equal if their IDs don't match
+        
+        
+
+
+
+class Catalog:
+
+    def __init__(self):
+        """
+        Initialize a Catalog object with an empty dictionary for course offerings
+        """
+        self.courseOfferings = {} # Dictionary to store courses
+
+    def addCourse(self, cid, cname, credits):
+        """
+        Add a course to the catalog if it doesn't already exist
+        """
+        if cid not in self.courseOfferings:
+            self.courseOfferings[cid] = Course(cid,cname,credits)  # Add new course
+            return "Course added successfully"
+        else:
+            return "Course already added"
+        
+
+    def removeCourse(self, cid):
+        """
+        Remove a course from the catalog if it exists
+        """
+        if cid in self.courseOfferings:
+            del self.courseOfferings[cid] # Remove course from dictionary
+            return "Course removed successfully"
+        else:
+            return "Course not found"
+
+    def _loadCatalog(self, file):
+        """
+        Load courses from a CSV file into the catalog
+        """
+        target_path = os.path.join(os.path.dirname(__file__), file)
+        with open(target_path, "r") as f:
+            course_info = f.readlines() # Read all lines from the file
+        for lines in course_info:
+            course_list = lines.split(',') # Split each line by comma
+            cid = course_list[0] # Course ID
+            cname = course_list[1] # Course name
+            credits = int(course_list[2]) # Number of credits
+            if cid not in self.courseOfferings:
+                self.courseOfferings[cid] = Course(cid,cname,credits) # Add course to catalog
+
+
+class Semester:
+
+    def __init__(self):
+        """
+        Initialize a Semester object with an empty dictionary for courses
+        """
+        self.courses = {} # Dictionary to store courses
+
+    def __str__(self):
+        """
+        Return a string representation of the Semester object
+        """
+        if self.courses != {}:
+            final_str = ""
+            for key,value in self.courses.items():
+                final_str += f'{key}; ' # Append each course ID to the final string
+            return final_str[:-2] # Remove the last semicolon and space
+        return "No courses"
+
+    __repr__ = __str__
+
+    def addCourse(self, course):
+        """
+        Add a course to the semester if it doesn't already exist
+        """
+        if course.cid not in self.courses: 
+            self.courses[course.cid] = course # Add course to dictionary
+        else:
+            return "Course already added"
+
+    def dropCourse(self, course):
+        """
+        Remove a course from the semester if it exists
+        """
+        if course.cid in self.courses:
+            del self.courses[course.cid] # Remove course from dictionary
+        else:
+            return "No such course"
+
+    @property
+    def totalCredits(self):
+        """
+        Calculate the total number of credits for the semester
+        """
+        totalCredits = 0 
+        for key,value in self.courses.items():
+            credit = value.credits # Get credits for each course
+            totalCredits += credit # Add credits to total
+        return totalCredits
+
+    @property
+    def isFullTime(self):
+        """
+        Check if the semester is full-time (12 or more credits)
+        """
+        if self.totalCredits >= 12:
+            return True # Full-time if 12 or more credits
+        return False
+
+    
+class Loan:
+
+    def __init__(self, amount):
+        """
+        Initialize a Loan object with a loan ID and amount
+        """
+        self.loan_id = self.__getloanID # Generate a random loan ID
+        self.amount = amount 
+
+
+    def __str__(self):
+        """
+        Return a string representation of the Loan object
+        """
+        return f"Balance: ${self.amount}" # Format: "Balance: $Amount"
+
+    __repr__ = __str__
+
+
+    @property
+    def __getloanID(self):
+        """
+        Generate a random loan ID
+        """
+        return random.randint(10000,99999) # Random number between 10000 and 99999
+
+
+
+class Person:
+    
+    def __init__(self, name, ssn):
+        """
+        Initialize a Person object with a name and SSN
+        """
+        self.name = name
+        self.__ssn = ssn # Private attribute for SSN
+
+    
+
+    def __str__(self):
+        """
+        Return a string representation of the Person object
+        """
+        ssn = self.get_ssn()
+        last_four_digit_ssn = ssn[-4:] # Get the last four digits of the SSN
+        return f"Person({self.name}, ***-**-{last_four_digit_ssn})" # Format: "Person(Name, ***-**-SSN)"
+
+    def get_ssn(self):
+        """ 
+        Return the SSN of the person
+        """
+        return self.__ssn # Return private SSN attribute
+
+    __repr__ = __str__
+
+    
+    def __eq__(self, other):
+        """
+        Check if two Person objects are equal based on their SSN
+        """
+        if isinstance(other, Person):
+            other_ssn = other.get_ssn()
+            self_ssn = self.get_ssn()
+            if self_ssn == other_ssn:
+                return True # People are equal if their SSNs match
+        return False
+
+class Staff(Person):
+
+    def __init__(self, name, ssn, supervisor=None):
+        """
+        Initialize a Staff object with name, SSN, and private attribute of supervisor
+        """
+        super().__init__(name, ssn)
+        self.__supervisor = supervisor
+
+
+    def __str__(self):
+        """
+        Return a string representation of the Staff object
+        """
+        return f"Staff({self.name}, {self.id})" # Format: "Staff(Name, ID)"
+
+    __repr__ = __str__
+
+
+    @property
+    def id(self):
+        """
+        Generate a unique ID for the staff member based on their name and SSN
+        """
+        ssn = self.get_ssn()
+        initial = ''
+        initial_name_list = self.name.split(' ')
+        for names in initial_name_list:
+            initial += names[0].lower() # Get the first letter of each name
+        return f'905{initial}{ssn[-4:]}' # Format: "905InitialsLastFourSSN"
+
+    @property   
+    def getSupervisor(self):
+        """
+        Return the supervisor of the staff member
+        """
+        return self.__supervisor
+
+
+    def setSupervisor(self, new_supervisor):
+        """
+        Set a new supervisor for the staff member
+        """
+        if isinstance(new_supervisor,Staff):
+            self.__supervisor = new_supervisor # Update the private supervisor attribute
+            return 'Completed!'
+        
+
+
+    def applyHold(self, student):
+        """
+        Apply a hold to a student
+        """
+        if isinstance(student, Student):
+            student.hold = True # Set the student's hold attribute to True
+            return 'Completed!'
+
+    def removeHold(self, student):
+        """
+        Remove a hold from a student
+        """
+        if isinstance(student, Student):
+            student.hold = False # Set the student's hold attribute to False
+            return 'Completed!'
+
+    def unenrollStudent(self, student):
+        """
+        Unenroll a student
+        """
+        if isinstance(student, Student):
+            student.active = False # Set the student's active attribute to False
+
+    def createStudent(self, person):
+        """
+        Create a new student from a person
+        """
+        if isinstance(person, Person):
+            return Student(person.name, person.get_ssn(), 'Freshman') # Return a new Student object
+
+
+
+
+class Student(Person):
+
+    def __init__(self, name, ssn, year):
+        """
+        Initialize a Student object with name, SSN, year, and other attributes
+        """
+        random.seed(1)
+        super().__init__(name, ssn)
+        self.classCode = year
+        self.semesters = {} # Dictionary to store semesters
+        self.hold = False
+        self.active = True 
+        self.account = self.__createStudentAccount() # Create a student account
+    
+    def __str__(self):
+        """
+        Return a string representation of the Student object
+        """
+        return f"Student({self.name}, {self.id}, {self.classCode})" # Format: "Student(Name, ID, ClassCode)"
+    __repr__ = __str__
+
+    def __createStudentAccount(self):
+        """
+        Create a StudentAccount object for the student
+        """
+        if self.active:
+            return StudentAccount(self) # Return a new StudentAccount 
+
+
+    @property
+    def id(self):
+        """
+        Generate a unique ID for the student based on their name and SSN
+        """
+        ssn = self.get_ssn()
+        last_four_ssn = ssn[-4:] # Get the last four digits of the SSN
+        initial = ''
+        initial_name_list = self.name.split(' ')
+        for names in initial_name_list:
+            initial += names[0].lower() # Get the first letter of each name
+        return f"{initial}{last_four_ssn}"# Format: "InitialsLastFourSSN"
+
+
+    def registerSemester(self):
+        """
+        Register a new semester for the student and update their class code
+        """
+        if self.active and not self.hold:
+            if self.semesters == {}: #Creates intial semester value
+                key_value = [0]
+            else:
+                key_value = list(self.semesters.keys()) # Gets list of semesters
+            semester_current = max(key_value) + 1 # Adds one to the last semester
+            if semester_current == 1 or semester_current == 2: # Checks if Freshman
+                self.classCode = 'Freshman'
+                self.semesters[semester_current] = Semester() # Add a new semester
+            if semester_current == 3 or semester_current == 4: # Checks if Sophomore
+                self.classCode = 'Sophomore'
+                self.semesters[semester_current] = Semester() # Add a new semester
+            if semester_current == 5 or semester_current == 6: # Checks if Junior
+                self.classCode = 'Junior'
+                self.semesters[semester_current] = Semester() # Add a new semester
+            if semester_current == 7 or semester_current == 8: # Checks if Senior
+                self.classCode = 'Senior'
+                self.semesters[semester_current] = Semester() # Add a new semester
+        else: 
+            return "Unsuccessful operation"
+
+
+    def enrollCourse(self, cid, catalog):
+        """
+        Enroll the student in a course if it exists in the catalog and they are not already enrolled
+        """
+        if self.active and not self.hold: # Checks if student is active and not on hold
+            if cid in catalog.courseOfferings: # Checks if course exists in catalog
+                key_value = list(self.semesters.keys())
+                semester_current = max(key_value) # Gets current semester
+                if cid not in self.semesters[semester_current].courses: # Checks if course already added
+                    course = catalog.courseOfferings[cid]
+                    self.semesters[semester_current].addCourse(course) # Adds course to current semester
+                    self.account.chargeAccount(StudentAccount.CREDIT_PRICE * course.credits) # Charges Account
+                    return 'Course added successfully'
+                else:
+                    return 'Course already enrolled'
+            else:
+                return "Course not found"
+        else:
+            return "Unsuccessful operation"
+
+    def dropCourse(self, cid):
+        """
+        Drop a course for the student if they are enrolled in it
+        """
+        if self.active and not self.hold:# Checks if student is active and not on hold
+            key_value = list(self.semesters.keys())
+            semester_current = max(key_value) # Gets current semester
+            if cid in self.semesters[semester_current].courses: # Checks if course exists in semester
+                course = self.semesters[semester_current].courses[cid]
+                self.semesters[semester_current].dropCourse(course) # Drops course from semester
+                self.account.makePayment(.5 * (StudentAccount.CREDIT_PRICE * course.credits)) # Removes half of the course price
+                return 'Course dropped successfully'
+            else:
+                return 'Course not found'
+        else:
+            return 'Unsuccessful operation'
+    
+    def getLoan(self, amount):
+        """
+        Get a loan for the student if they are active and enrolled full-time
+        """
+        if self.active: # checks if student is active
+            key_value = list(self.semesters.keys())
+            semester_current = max(key_value) # Gets current semester
+            if self.semesters[semester_current].isFullTime: # Checks if student is full time
+                loan = Loan(amount)
+                self.account.loans[loan.loan_id] = loan # Adds loan_id and loan amount to loan dictionary
+                self.account.makePayment(amount) # Removes amount from account
+            else:
+                return 'Not full-time'
+        else:
+            return 'Unsuccessful operation'
+
+
+class StudentAccount:
+
+    CREDIT_PRICE = 1000 # Class attribute for the price per credit
+
+    def __init__(self, student):
+        """
+        Initialize a StudentAccount object with a student, balance, and student loan dictionary
+        """
+        self.student = student 
+        self.balance = 0
+        self.loans = {} # Creates Loan Dictionary
+
+
+    def __str__(self):
+        """
+        Return a string representation of the StudentAccount object
+        """
+        return f"Name: {self.student.name}\nID: {self.student.id}\nBalance: ${self.balance}" # Format: "Name: Name\nID: ID\nBalance: Balance"
+
+
+    __repr__ = __str__
+
+
+    def makePayment(self, amount):
+        """
+        Make a payment to the student's account
+        """
+        self.balance -= amount # Subtract the payment amount from the balance
+        return self.balance
+
+
+    def chargeAccount(self, amount):
+        """
+        Charge the student's account
+        """
+        self.balance += amount # Add the charge amount to the balance
+        return self.balance 
