@@ -1,0 +1,56 @@
+class Wordle:
+    """Implements Wordle game logic with player tracking.
+    
+    Attributes:
+        player: Associated Player object
+        word: Target word to guess
+        guess_number: Current guess count
+        guess_max: Maximum allowed guesses
+        
+    >>> w = Wordle(Player('Test'), 'apple')
+    >>> w.play('12345')
+    'Guess must be all letters'
+    >>> w2 = Wordle(Player('Test'), 'hello')
+    >>> w2.play('hello')
+    'You won the game'
+    """
+
+    def __init__(self, player, word):
+        """Initialize game with target word and player"""
+        self.player = player
+        self.word = word.lower()
+        self.guess_number = 1
+        self.guess_max = 6
+        self.game_over = False
+    
+
+    def process_guess(self, guess):
+        """Generate feedback string for a guess"""
+        if len(guess) != 5:
+            return 'Guess must be 5 letters long'
+        if not guess.isalpha():
+            return "Guess must be all letters"
+        unknown_word = ['_','_','_','_','_']
+        for i in range(len(guess)):
+            if guess[i] == self.word[i]: # Exact match
+                unknown_word[i] = guess[i].upper()
+            elif guess[i] in self.word: # Letter exists elsewhere
+                unknown_word[i] = guess[i].lower()
+        return ''.join(unknown_word)
+
+    def play(self, guess):
+        """Process a game turn with guess validation"""
+        guess = guess.lower()
+        if self.game_over == True:
+            return "Game over"
+        elif guess == self.word:
+            self.guess_number += 1
+            self.game_over = True
+            self.player.update_win(self.guess_number-1)
+            return "You won the game"
+        elif self.guess_number >= self.guess_max:
+            self.game_over = True
+            self.player.update_loss()
+            return f"The word was {self.word}"
+        self.guess_number += 1
+        return self.process_guess(guess)
