@@ -1,0 +1,307 @@
+"""
+This calculator is designed to handle both variables and numbers, allowing for flexible and dynamic computations. 
+The goal is to create a tool that supports mathematical expressions with variable inputs, 
+making it useful for a wide range of applications beyond simple numerical calculations.
+"""
+
+class Stack:
+
+    def __init__(self):
+        # Initializes an empty stack with top set to None
+        self.top = None
+    
+    def __str__(self):
+        # Returns a string representation of the stack from top to bottom
+        temp=self.top
+        out=[]
+        while temp:
+            out.append(str(temp.value)) # Append each node's value
+            temp=temp.next
+        out='\n'.join(out) # Join values for printing
+        return ('Top:{}\nStack:\n{}'.format(self.top,out))
+
+    __repr__=__str__
+
+
+    def isEmpty(self):
+        # Returns True if the stack is empty
+        if self.top == None:
+            return True
+        return False
+
+    def __len__(self): 
+        # Returns the number of elements in the stack or None if it's empty
+        if self.isEmpty() == True:
+            return None
+        current = self.top
+        num = 1
+        while current.next != None:
+            if current.next != None:
+                num += 1 
+                current = current.next
+        return num
+
+    def push(self,value):
+        # Pushes a value onto the top of the stack
+        new_node = Node(value)
+        new_node.next = self.top
+        self.top = new_node
+
+     
+    def pop(self):
+        # Removes and returns the top value of the stack
+        if self.isEmpty() == True:
+            return None
+        temp = self.top.value
+        self.top = self.top.next
+        return temp
+
+    def peek(self):
+        # Returns the top value without removing it
+        if self.isEmpty() == True:
+            return None
+        return self.top.value
+
+
+#=============================================== Part II ==============================================
+
+class Calculator:
+    def __init__(self):
+        # Initializes with an empty expression
+        self.__expr = None
+
+
+    @property
+    def getExpr(self):
+        # Returns the current expression
+        return self.__expr
+
+    def setExpr(self, new_expr):
+        # Sets a new expression if valid
+        if isinstance(new_expr, str):
+            self.__expr=new_expr
+        else:
+            print('setExpr error: Invalid expression')
+            return None
+
+    def _isNumber(self, txt):
+        # Helper method to check if a string can be converted to a float
+        try:
+            float(txt)
+        except ValueError:
+            return False
+        return True 
+
+
+
+
+    def _getPostfix(self, txt):
+
+
+        # YOUR CODE STARTS HERE
+        postfixStack = Stack()  # method must use postfixStack to compute the postfix expression
+        
+        def tokenize(expr):
+            # Tokenizer to split the expression into meaningful parts
+            tokenized_list = []
+            oper = ['+','-','*','^', '/', '(', ')']
+            str = ''
+            num = 0 
+            while num < len(expr):
+                if expr[num] != ' ':
+                    str += expr[num]
+                    try:
+                        if expr[num] == '-' and self._isNumber(expr[num+1]): # Handles negative numbers
+                            str = str
+                            if num == 0 or expr[num-1] == '(':
+                                str = str
+                            elif self._isNumber(expr[num-1]):
+                                tokenized_list.append(str)
+                                str = ''
+                        if expr[num] in oper and self._isNumber(expr[num+1]): # Push operators when followed by a number
+                            if expr[num] == '-':
+                                str = str
+                            else:
+                                tokenized_list.append(str)
+                                str = ''
+                        elif expr[num+1] == ' ' or expr[num+1] in oper:  # Add tokens if next char is space or operator
+                            if self._isNumber(str):
+                                tokenized_list.append(float(str))
+                                str = ''
+                            else:
+                                tokenized_list.append(str)
+                                str = ''
+                    except IndexError:
+                        if self._isNumber(str): #Gets Rest of Numbers and Operators
+                            tokenized_list.append(float(str))
+                            str = ''
+                        else:
+                            tokenized_list.append(str)
+                            str = ''
+                num +=1
+            return tokenized_list
+        
+        
+        list_txt = tokenize(txt) # Run tokenize
+        
+        def validate(lst_txt):
+            num = 0
+            operat = {'^', '*', '/', '+', '-'}
+            num_parentheses = 0
+            prev = None
+            while num < len(lst_txt):
+                current = lst_txt[num]
+                if isinstance(current, str): # Check for invalid characters
+                    if current not in operat and not self._isNumber(current) and current not in '()':
+                        return False
+                if current == '(': # Check parenthesis pairing and context
+                    num_parentheses += 1
+                    if prev == ')':
+                        return False
+                    elif prev and self._isNumber(prev):
+                        return False
+                elif current == ')':
+                    num_parentheses -= 1
+                    if num_parentheses < 0:
+                        return False
+                elif current in operat: # Ensure operators are not adjacent or incorrectly placed
+                    if prev in operat or (prev is None and current != '-') or (prev == '(' and current != '-'):
+                        return False
+                elif self._isNumber(current): # Disallow consecutive numbers and numbers after ')'
+                    if prev and self._isNumber(prev):
+                        return False
+                    if prev == ')':
+                        return False
+                prev = current
+                num += 1
+            if num_parentheses != 0:
+                return False
+            elif prev in operat or prev == '(': # Ensure all parentheses are closed and expression ends validly
+                return False
+            return True
+        
+        if not validate(list_txt): # Run Validate
+            return None
+        
+        order = {'+' : 1 , '-' : 1,'*' : 2, '/':2, '^':3} # Operator precedence
+        final_list = []
+        for nums in list_txt: # Convert infix to postfix
+            if isinstance(nums, float):
+                final_list.append(str(nums))
+            elif nums == '(':
+                postfixStack.push(nums)
+            elif nums == ')':
+                while not postfixStack.isEmpty() and postfixStack.peek() != '(':
+                    final_list.append(postfixStack.pop())
+                postfixStack.pop() # Discard the '('
+            else: # Operator
+                while not postfixStack.isEmpty() and postfixStack.peek() != '(' and (order[postfixStack.peek()] > order[nums] or (order[postfixStack.peek()] == order[nums] and nums != '^')):
+                    final_list.append(postfixStack.pop())
+                postfixStack.push(nums)
+
+        while not postfixStack.isEmpty(): # Pop remaining operators
+            final_list.append(postfixStack.pop())
+
+        return ' '.join(final_list) 
+
+    
+    @property
+    def calculate(self):
+        # Evaluates the expression stored in the calculator.
+
+        if not isinstance(self.__expr,str) or len(self.__expr)<=0:
+            print("Argument error in calculate")
+            return None
+
+        calcStack = Stack()   # method must use calcStack to compute the  expression
+
+        expression = self.getExpr
+        post_fix_note = self._getPostfix(expression)
+        if post_fix_note != None:
+            expression_list = post_fix_note.split()
+        else:
+            return None
+        operators = ['+','-','*','/','^']
+        if len(expression_list) == 1 and self._isNumber(expression_list[0]): # Short-circuit for a single number
+            return float(expression_list[0])
+        for items in expression_list: # Evaluate postfix
+            if self._isNumber(items):
+                calcStack.push(items)
+            elif items in operators:
+                num_1 = float(calcStack.pop())
+                num_2 = float(calcStack.pop())
+                if items == '+':
+                    result = (num_1 + num_2)
+                if items == '-':
+                    result = (num_2 - num_1)
+                if items == '*':
+                    result = (num_1 * num_2)
+                if items == '/':
+                    if num_1 == 0:
+                        return None
+                    result = (num_2 / num_1)
+                if items == '^':
+                    result = num_2 ** num_1
+                calcStack.push(result)
+        return result
+                
+
+#=============================================== Part III ==============================================
+
+class AdvancedCalculator:
+  
+    def __init__(self):
+        self.expressions = ''
+        self.states = {}
+
+    def setExpression(self, expression):
+        self.expressions = expression
+        self.states = {}
+
+    def _isVariable(self, word):
+        #Checks whether a word is a valid variable name.
+        for i in range(len(word)):
+            if i == 0 and not word[i].isalpha():
+                return False
+            if not word[i].isalnum():
+                return False
+        return True 
+       
+
+    def _replaceVariables(self, expr):
+        #Returns the modified string or None if any variable is undefined.
+        expr_split = expr.split()
+
+        for values in range(len(expr_split)):
+            if self._isVariable(expr_split[values]):
+                if expr_split[values] not in self.states:
+                    return 
+                expr_split[values] = str(self.states[expr_split[values]])
+        return ' '.join(expr_split)
+
+
+    
+    def calculateExpressions(self):
+        #Parses and evaluates a full string of expressions. Handles variable assignments and one return expression.
+        self.states = {} 
+        calcObj = Calculator() # method must use calcObj to compute each expression
+        expr_split = self.expressions.split(';') # Split into segments
+        final = {}
+        for i in range(len(expr_split)): 
+            if i == len(expr_split) - 1: # Last expression (return value)
+                expr = expr_split[i][7:].strip() # Remove 'return '
+                expr_final = self._replaceVariables(expr)
+                if expr_final:
+                    calcObj.setExpr(expr_final)
+                    result = calcObj.calculate
+                    final['_return_'] = result
+            else:
+                expr_total = expr_split[i].split('=') # Handle variable assignment expressions
+                var = expr_total[0].strip()
+                expr = expr_total[1].strip()
+                expr_final = self._replaceVariables(expr)
+                if self._isVariable(var) and expr_final:
+                    calcObj.setExpr(expr_final)
+                    self.states[var] = calcObj.calculate
+                    final[expr_split[i]] = self.states.copy()
+        return final
