@@ -1,0 +1,93 @@
+
+
+class Point2D:
+    """Represents a 2D point with x,y coordinates"""
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
+class Line: 
+    """Represents a line segment between two points with geometric operations.
+    
+    >>> line1 = Line(Point2D(0,0), Point2D(3,4))
+    >>> line1.getDistance
+    5.0
+    >>> Point2D(1.5, 2.0) in line1
+    True
+    """
+    def __init__(self, point1, point2):
+        """Initialize line with two endpoints"""
+        self.point1 = point1
+        self.point2 = point2
+
+    @property
+    def getDistance(self):
+        """Calculate distance between endpoints"""
+        distance = ((self.point2.x-self.point1.x)**2 + (self.point2.y-self.point1.y)**2)**.5
+        return round(distance, 3)
+       
+    
+    @property
+    def getSlope(self):
+        """Calculate line slope (returns inf for vertical lines)"""
+        if (self.point1.x - self.point2.x) == 0:
+            slope = float('inf')
+            return slope
+        elif (self.point1.y - self.point2.y) == 0:
+            return 0.0
+        else:
+            slope = (self.point1.y - self.point2.y)/(self.point1.x - self.point2.x)
+            return round(slope, 3)
+        
+    def y_intercept(self):
+        """Calculate y-intercept (None for vertical lines)"""
+        if self.getSlope == float('inf'):
+            return None
+        y_intercept = self.point1.y -(self.getSlope*self.point1.x)
+        return round(y_intercept, 3)
+    
+    def __str__(self):
+        """Return line equation in slope-intercept form"""
+        if self.point2.y - self.point1.y == 0:
+            intercept = self.y_intercept()
+            return f'y = {round(intercept, 3)}'
+        elif self.point2.x - self.point1.x == 0:
+            return "Undefined"
+        elif self.y_intercept() == 0.0:
+            m = self.getSlope
+            return f'y = {m}x'
+        else:
+            intercept = self.y_intercept()
+            m = self.getSlope
+            return f'y = {m}x + {intercept}'
+
+    __repr__ = __str__
+
+    def __eq__(self,other):
+        """Check if lines have identical endpoints"""
+        if isinstance(other, Line) and self.point2.x==other.point2.x and self.point2.y==other.point2.y and self.point1.x==other.point1.x and self.point1.y==other.point1.y:
+            return True
+        else:
+            return False
+    
+    def __mul__(self,other):
+        """Create scaled line by multiplying endpoint coordinates"""
+        if isinstance(other, int):
+            newline= Line(Point2D(self.point1.x*other,self.point1.y*other),Point2D(self.point2.x*other,self.point2.y*other))
+            return newline
+        else:
+            return None
+    
+    def __contains__(self,other):
+        """Check if point lies on the line using floating point tolerance"""
+        if not isinstance(other,Point2D):
+            return False
+        slope = self.getSlope
+        if slope == float('inf'):
+            return other.x == self.point1.x
+        intercept = self.y_intercept()
+        if intercept is None:
+            return False
+        expect_y = slope * other.x + intercept
+        return math.isclose(other.y, expect_y, abs_tol= 1e-3)
